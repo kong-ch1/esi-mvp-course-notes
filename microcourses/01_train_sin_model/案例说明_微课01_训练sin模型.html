@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>微课 01 · 训练 sin 模型 — 怎么实现的、遇到什么问题</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1f2328; --ink-2:#4a5259; --ink-3:#6b7480;
+    --line:#e3e6ea; --line-2:#eef1f4;
+    --accent:#2f6feb; --accent-soft:#eaf1fe;
+    --ok:#1a7f4b; --ok-soft:#e8f5ee;
+    --warn:#a8620a; --warn-soft:#fdf3e3;
+    --fix:#b4232c; --fix-soft:#fdeceb;
+    --mono:"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:40px 24px 72px; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    font-size:15.5px; line-height:1.78; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px; margin:0 auto}
+  header.top{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:30px 34px; margin-bottom:26px; box-shadow:0 1px 3px rgba(16,24,40,.04);
+  }
+  header.top h1{margin:0 0 6px; font-size:27px; letter-spacing:-.3px; line-height:1.35}
+  header.top .sub{color:var(--ink-3); font-size:14px; margin-bottom:18px}
+  .meta{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px 22px; font-size:13.5px}
+  .meta div{color:var(--ink-2)}
+  .meta b{color:var(--ink); font-weight:600}
+  section{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:26px 34px 30px; margin-bottom:20px; box-shadow:0 1px 3px rgba(16,24,40,.04);
+  }
+  h2{
+    font-size:20px; margin:0 0 18px; padding-bottom:12px; border-bottom:2px solid var(--line-2);
+    letter-spacing:-.2px;
+  }
+  h2 .n{
+    display:inline-block; min-width:26px; height:26px; line-height:26px; text-align:center;
+    background:var(--accent); color:#fff; border-radius:7px; font-size:14px; margin-right:10px;
+    font-weight:600; vertical-align:2px;
+  }
+  h3{font-size:16.5px; margin:26px 0 12px; color:var(--ink)}
+  h3:first-of-type{margin-top:6px}
+  h4{font-size:15px; margin:20px 0 10px; color:var(--ink-2)}
+  p{margin:0 0 13px}
+  ul,ol{margin:0 0 14px; padding-left:24px}
+  li{margin-bottom:6px}
+  code{
+    font-family:var(--mono); font-size:13px; background:#f1f3f6; color:#243b53;
+    padding:1.5px 5px; border-radius:5px; border:1px solid var(--line-2);
+  }
+  pre{
+    background:#f8f9fb; border:1px solid var(--line); border-left:3px solid var(--accent);
+    border-radius:8px; padding:13px 16px; overflow-x:auto; margin:0 0 14px;
+    font-family:var(--mono); font-size:12.8px; line-height:1.62; color:#243b53;
+  }
+  pre code{background:none; border:none; padding:0; font-size:inherit}
+  table{width:100%; border-collapse:collapse; margin:0 0 16px; font-size:13.8px}
+  th,td{border:1px solid var(--line); padding:8px 11px; text-align:left; vertical-align:top}
+  th{background:#f4f6f9; font-weight:600; color:var(--ink-2); white-space:nowrap}
+  td.num,th.num{text-align:right; font-family:var(--mono); font-size:12.8px; white-space:nowrap}
+  tbody tr:nth-child(even){background:#fcfcfd}
+  .md5{font-family:var(--mono); font-size:11.6px; color:var(--ink-2); word-break:break-all}
+  .badge{
+    display:inline-block; padding:1px 8px; border-radius:20px; font-size:12px; font-weight:600;
+    line-height:1.7; white-space:nowrap;
+  }
+  .b-ok{background:var(--ok-soft); color:var(--ok); border:1px solid #bfe3ce}
+  .b-fix{background:var(--fix-soft); color:var(--fix); border:1px solid #f5c9c6}
+  .b-info{background:var(--accent-soft); color:var(--accent); border:1px solid #c9dcfb}
+  .b-warn{background:var(--warn-soft); color:var(--warn); border:1px solid #f2e0c2}
+  .callout{
+    border-radius:10px; padding:15px 18px; margin:0 0 16px; font-size:14.2px;
+    border:1px solid var(--line); border-left-width:4px; background:#fafbfc;
+  }
+  .callout .t{font-weight:700; display:block; margin-bottom:5px; font-size:14px}
+  .callout p:last-child{margin-bottom:0}
+  .c-ok{background:var(--ok-soft); border-color:#cfe9db; border-left-color:var(--ok)}
+  .c-ok .t{color:var(--ok)}
+  .c-warn{background:var(--warn-soft); border-color:#f2e0c2; border-left-color:var(--warn)}
+  .c-warn .t{color:var(--warn)}
+  .c-fix{background:var(--fix-soft); border-color:#f6d5d2; border-left-color:var(--fix)}
+  .c-fix .t{color:var(--fix)}
+  .c-info{background:var(--accent-soft); border-color:#d3e2fc; border-left-color:var(--accent)}
+  .c-info .t{color:var(--accent)}
+  .kv{font-family:var(--mono); font-size:13px}
+  .muted{color:var(--ink-3); font-size:13.5px}
+  .tag{font-family:var(--mono); font-size:11.5px; background:#eef1f4; border:1px solid var(--line);
+       padding:1px 6px; border-radius:5px; color:var(--ink-2)}
+  hr{border:none; border-top:1px solid var(--line-2); margin:24px 0}
+  .flow{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:0 0 18px}
+  .flow .step{
+    background:#f8f9fb; border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+    font-size:13.5px; position:relative;
+  }
+  .flow .step .no{
+    display:inline-block; width:20px; height:20px; line-height:20px; text-align:center;
+    background:var(--accent); color:#fff; border-radius:5px; font-size:11.5px; font-weight:700;
+    margin-right:6px;
+  }
+  .flow .step b{display:block; margin:6px 0 3px; font-size:14px}
+  .flow .step span{color:var(--ink-3); font-size:12.8px; line-height:1.55}
+  footer{max-width:940px; margin:0 auto; color:var(--ink-3); font-size:12.5px; text-align:center; padding-top:6px}
+  @media print{
+    body{background:#fff; padding:0; font-size:11pt}
+    section,header.top{box-shadow:none; break-inside:avoid; border-color:#ccc}
+    h2{break-after:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>微课 01 · 训练 sin 模型</h1>
+  <div class="sub">《端侧智能推理系统 MVP》 ｜ <span class="tag">microcourses/01_train_sin_model</span> ｜ 怎么实现的、遇到什么问题</div>
+  <div class="meta">
+    <div><b>报告日期</b><br>2026-09-17</div>
+    <div><b>运行环境</b><br>conda <code>esp32s3</code> / Python 3.11.16</div>
+    <div><b>计算设备</b><br>纯 CPU（无 GPU、无开发板）</div>
+    <div><b>状态</b><br><span class="badge b-ok">已验收</span></div>
+  </div>
+</header>
+
+<section>
+  <h2><span class="n">1</span>这个方案到底在做什么</h2>
+  <p>一句话：<b>教一个只有 4353 个参数的小神经网络去认一条正弦曲线</b>，然后把训练好的网络导出成 <code>.onnx</code>，为后面"塞进 ESP32-S3 芯片里跑"做准备。</p>
+  <p>为什么要先做这个"玩具题"？因为真实端侧部署的完整链路是 <b>训练 → 导出 → 量化 → 上板</b>。这条链路上每一步都可能出错，而 sin 曲线是<b>最便宜、最可控</b>的练习题：没有数据集要下、CPU 十几秒跑完、对错一眼能看出来。它相当于整套课程的"hello world"。</p>
+
+  <h3>三个概念先对齐</h3>
+  <table>
+    <thead><tr><th>名词</th><th>是什么</th><th>在这个案例里的角色</th></tr></thead>
+    <tbody>
+      <tr><td><b>PyTorch</b></td><td>训练框架</td><td>写网络结构、跑训练、存权重</td></tr>
+      <tr><td><b>ONNX</b></td><td>模型交换格式（一个文件）</td><td>PyTorch 和乐鑫工具链之间的"通用语"</td></tr>
+      <tr><td><b>ESP-DL / PPQ</b></td><td>乐鑫的端侧推理库 + 量化工具</td><td>下一课（微课 02）才登场</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">记不住没关系，只要知道：本课只做到"导出 ONNX"这一步为止。</p>
+</section>
+
+<section>
+  <h2><span class="n">2</span>怎么实现的（逐步拆解）</h2>
+
+  <div class="flow">
+    <div class="step"><span class="no">1</span><b>造数据</b><span>在 x∈[0,2π] 上取 1000 个点，y = sin(x) + 0.05×随机噪声</span></div>
+    <div class="step"><span class="no">2</span><b>搭网络</b><span>1→64→64→1 的 MLP，前两层后接 ReLU</span></div>
+    <div class="step"><span class="no">3</span><b>训练</b><span>Adam(lr=1e-4) + MSE 损失，跑 500 轮</span></div>
+    <div class="step"><span class="no">4</span><b>导出</b><span>转成 opset 12 的 ONNX，batch=1、静态 shape</span></div>
+  </div>
+
+  <h3>2.1 网络结构：三层全连接</h3>
+  <pre><code>输入 x (1维)
+  └─ fc1: 1  → 64   然后 ReLU     ← 1×64 + 64   =  128 个参数
+  └─ fc2: 64 → 64   然后 ReLU     ← 64×64 + 64  = 4160 个参数
+  └─ fc3: 64 → 1    不接激活      ← 64×1 + 1    =   65 个参数
+输出 y (1维)                          合计 4353 个参数</code></pre>
+  <p><b>为什么最后一层不接 ReLU？</b>因为 ReLU 会把负数压成 0，而 sin(x) 的值域是 [-1, 1]——<b>有负数</b>。最后一层要是接了 ReLU，网络永远输出不了负值，曲线下半部分就废了。这是新手最容易踩的直觉坑。</p>
+
+  <h3>2.2 训练配置（每一项都从源码回读过）</h3>
+  <table>
+    <thead><tr><th>项目</th><th>取值</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>样本数</td><td class="kv">1000</td><td>80/20 划分 → 训练 800 / 验证 200</td></tr>
+      <tr><td>批大小</td><td class="kv">32</td><td>800 ÷ 32 = 25 个 batch</td></tr>
+      <tr><td>优化器</td><td class="kv">Adam, lr=1e-4</td><td>学习率偏小，但配合 500 轮足够</td></tr>
+      <tr><td>损失函数</td><td class="kv">MSELoss</td><td>回归任务的标准选择</td></tr>
+      <tr><td>轮数</td><td class="kv">500</td><td>CPU 上约 13 秒</td></tr>
+      <tr><td>随机种子</td><td class="kv">42</td><td>固定数据划分</td></tr>
+      <tr><td>噪声强度</td><td class="kv">0.05</td><td><code>y = sin(x) + 0.05×randn()</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.3 导出 ONNX 的关键约束</h3>
+  <ul>
+    <li><code>opset 12</code> —— 乐鑫工具链要求的版本，太高会不认。</li>
+    <li><code>batch=1</code> + <b>静态 shape</b> —— 端侧芯片一次只推理一张图，不能有动态维度。</li>
+    <li><code>dynamo=False</code> —— 走传统导出路径，兼容性更稳。</li>
+    <li>导出后再跑一遍 <code>onnxsim</code> 简化，最后用 <code>onnx.checker</code> 校验合法性。</li>
+  </ul>
+
+  <div class="callout c-info">
+    <span class="t">实际执行的命令</span>
+    <pre style="margin:0"><code>conda activate esp32s3
+cd /d C:\Users\user\Desktop\新建文件夹 (2)\01_train_sin_model
+python sin_model.py --epochs 500 --seed 42</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">3</span>实测结果</h2>
+
+  <h3>3.1 最终 loss（核心数据）</h3>
+  <table>
+    <thead><tr><th>运行</th><th class="num">最终 train loss</th><th class="num">最终 val loss</th></tr></thead>
+    <tbody>
+      <tr><td>seed 42 ｜ 老师原版脚本</td><td class="num"><b>0.002467</b></td><td class="num"><b>0.002973</b></td></tr>
+      <tr><td>seed 42 ｜ 手写复刻版</td><td class="num"><b>0.002472</b></td><td class="num"><b>0.003033</b></td></tr>
+      <tr><td>seed 0 ｜ 老师脚本</td><td class="num">0.002856</td><td class="num">0.002525</td></tr>
+      <tr><td>seed 123 ｜ 老师脚本</td><td class="num">0.002732</td><td class="num">0.002863</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">换 seed 后 loss 只在小数第 4 位浮动 → 说明这个任务<b>对随机种子不敏感</b>，训练是稳的。</p>
+
+  <h3>3.2 附带指标（由 .pth 权重重算，验证集 200 条）</h3>
+  <table>
+    <thead><tr><th>指标</th><th class="num">数值</th><th>怎么理解</th></tr></thead>
+    <tbody>
+      <tr><td>验证集 MSE</td><td class="num">0.003033</td><td>均方误差，越小越好</td></tr>
+      <tr><td>验证集 MAE</td><td class="num">0.0430</td><td><b>平均每个点只差 0.043</b>（满量程 2）</td></tr>
+      <tr><td>验证集 R²</td><td class="num">0.9936</td><td>拟合优度，1.0 为完美，0.99+ 属优秀</td></tr>
+      <tr><td>无噪声 sin(x) 上的 MAE</td><td class="num">0.0107</td><td>去掉噪声后误差更小 → 网络确实学到了 sin 的<b>形状</b>，不是背下了噪声</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.3 产物清单</h3>
+  <table>
+    <thead><tr><th>文件</th><th class="num">字节数</th><th>作用</th></tr></thead>
+    <tbody>
+      <tr><td class="kv">sin_model.pth</td><td class="num">20397</td><td>PyTorch 权重（后续要用它复现）</td></tr>
+      <tr><td class="kv">sin_model.onnx</td><td class="num">18244</td><td><b>下一课量化的输入</b></td></tr>
+      <tr><td class="kv">loss_history.csv</td><td class="num">11419</td><td>500 轮 loss 记录</td></tr>
+      <tr><td class="kv">loss_curve.png</td><td class="num">49244</td><td>loss 下降曲线</td></tr>
+      <tr><td class="kv">fit_curve.png</td><td class="num">101718</td><td>拟合效果对比图</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2><span class="n">4</span>遇到的问题（真实踩坑记录）</h2>
+
+  <h3>坑 1 ｜ 终端搞混，报"找不到环境"</h3>
+  <div class="callout c-fix">
+    <span class="t">现象</span>
+    <p>执行 <code>conda activate torch_gpu</code> 报 <code>EnvironmentNameNotFound: Could not find conda environment: torch_gpu</code>，但环境明明装了。</p>
+  </div>
+  <p><b>根因</b>：这台机器上有<b>两套互不相通的 conda</b>——一套在 Windows 侧（Anaconda Prompt），一套在 WSL/Ubuntu 侧。课程环境在 Windows 侧，而当时开的是 Ubuntu 终端。</p>
+  <p><b>怎么判断</b>：看提示符。出现 <code>k@DESKTOP-XXXX:~$</code> 就是 Ubuntu；<code>(esp32s3) C:\Users\user\...&gt;</code> 才是 Anaconda Prompt。</p>
+  <p><b>万能兜底</b>：不激活环境，直接用全路径，任何终端都能跑：</p>
+  <pre><code>"C:\Users\user\anaconda3\envs\esp32s3\python.exe" sin_model.py --epochs 500 --seed 42</code></pre>
+
+  <h3>坑 2 ｜ 老师 README 的命令在 cmd 里全是错的</h3>
+  <div class="callout c-warn">
+    <span class="t">现象</span>
+    <p>README 里写 <code>wget</code>、<code>ls</code>、<code>test -f</code>、<code>head -4</code>，在 Anaconda Prompt 里逐条报"不是内部或外部命令"。</p>
+  </div>
+  <p><b>根因</b>：README 是 <b>bash 语法</b>（Linux/macOS），用户用的是 <b>cmd</b>（Windows）。这不是用户操作错，是文档没做平台适配。</p>
+  <table>
+    <thead><tr><th>老师写的（bash）</th><th>cmd 里要换成</th></tr></thead>
+    <tbody>
+      <tr><td class="kv">ls X</td><td class="kv">dir X</td></tr>
+      <tr><td class="kv">test -f X</td><td class="kv">dir X</td></tr>
+      <tr><td class="kv">cat X</td><td class="kv">type X</td></tr>
+      <tr><td class="kv">head -4 X</td><td class="kv">python -c "print(open('X').read())"</td></tr>
+      <tr><td class="kv">wget -O f URL</td><td class="kv">curl -L -C - -o f URL</td></tr>
+      <tr><td class="kv">unzip f</td><td class="kv">tar -xf f</td></tr>
+      <tr><td>行尾 <code>\</code> 续行</td><td>行尾 <code>^</code> 续行</td></tr>
+    </tbody>
+  </table>
+
+  <h3>坑 3 ｜ 照 README 装依赖，会悄悄降级 setuptools</h3>
+  <div class="callout c-fix">
+    <span class="t">现象（用 dry-run 预演抓到的，实际没执行）</span>
+    <pre style="margin:0"><code>Collecting setuptools&lt;82 (from torch==2.11.0 -&gt; requirements.txt (line 3))
+Would install setuptools-81.0.0</code></pre>
+  </div>
+  <p><b>根因</b>：环境里 setuptools 是 83.0.0，而 <code>torch==2.11.0</code> 声明要求 <code>setuptools&lt;82</code>。所以"装依赖"这个动作<b>唯一的效果就是把 setuptools 降级</b>，其余 6 个包全是"already satisfied"。</p>
+  <p><b>为什么危险</b>：降级 = 先卸载再安装。这台机器的安全策略会拦截批量删除，包容易被删成"半残"（元数据还在、代码没了，pip 还以为装好了）。</p>
+  <p><b>怎么处理</b>：直接跳过（setuptools 只是打包工具，torch 运行时根本不 import 它，降级对课程<b>零收益</b>）。真要"照步骤走一遍"，加 <code>--no-deps</code>：</p>
+  <pre><code>python -m pip install --no-deps -r ..\01_train_sin_model\requirements.txt</code></pre>
+  <div class="callout c-ok">
+    <span class="t">养成的好习惯</span>
+    <p>动 pip 之前先跑 <code>pip install --dry-run -r &lt;文件&gt;</code> <b>预演</b>，看输出里有没有 <code>Would install</code> / <code>Would uninstall</code>。这是零风险的核实方式——不靠嘴说"危险"，让 pip 自己说。</p>
+  </div>
+
+  <h3>坑 4 ｜ 以为"设了 seed 就一定一样"</h3>
+  <div class="callout c-warn">
+    <span class="t">一开始的误解</span>
+    <p>以为手写版和老师版用同一个 seed 42，训练轨迹就该完全一致。</p>
+  </div>
+  <p><b>实际情况</b>：两个脚本<b>第 1 轮 loss 就不同</b>（0.389344 vs 0.451630）。原因是<b>随机数的消耗路径不一样</b>：老师脚本用全局随机数给 DataLoader 打乱数据，手写版用独立的 Generator——同样的 seed，喂给了不同的地方，结果自然不同。</p>
+  <p><b>正确的说法</b>：手写版的三套产物逐字节一致，只能证明<b>手写版自身可复现</b>，不能证明"和老师等价"。</p>
+
+  <h3>坑 5 ｜ 拿 PNG 当"完全一致"的证据</h3>
+  <div class="callout c-fix">
+    <span class="t">现象</span>
+    <p>同样数据跑出来的 <code>loss_curve.png</code>，肉眼一模一样，但 MD5 不同。</p>
+  </div>
+  <p><b>根因</b>：PNG 文件里内嵌了 matplotlib 的版本号等元数据，环境一变，文件字节就变。<b>图像文件不能作为逐字节证据</b>。</p>
+  <p><b>结论</b>：只有数值产物（<code>.csv</code> / <code>.onnx</code> / <code>.pth</code>）才算数。</p>
+
+  <h3>坑 6 ｜ 报错是"套娃"的，第一层报错不是根本原因</h3>
+  <div class="callout c-info">
+    <span class="t">现象</span>
+    <p>跑 <code>1.py</code> 时终端刷出一串报错，最上面那条看着像"文件找不到"。</p>
+  </div>
+  <p><b>真相</b>：真正的原因在<b>最下面一条</b>。Python 的报错栈是从外到内的，<b>最后一行才是根本原因</b>，上面全是"我在调用谁"的路径记录。新手常被最上面那条误导。</p>
+
+  <h3>坑 7 ｜ 数字凭记忆写，写错了四次</h3>
+  <div class="callout c-fix">
+    <span class="t">踩过的具体错误</span>
+    <ul style="margin-bottom:0">
+      <li>把学习率写成 <code>1e-3</code>（实际是 <code>1e-4</code>）</li>
+      <li>把噪声写成 <code>0.02</code>（实际是 <code>0.05</code>）</li>
+      <li>把轮数写成 <code>5000</code>（实际是 <code>500</code>）</li>
+      <li>把 4353 个参数错记成"老师脚本的特征"（其实是网络结构本身的）</li>
+    </ul>
+  </div>
+  <p><b>定下的规矩</b>：<b>凡是要写进交付物的数字，必须先打开源码确认或实跑一遍。</b>不许凭记忆、不许"应该差不多"。</p>
+</section>
+
+<section>
+  <h2><span class="n">5</span>这一课收获了什么</h2>
+  <ol>
+    <li><b>跑通了端侧 AI 的第一段链路</b>：训练 → 导出 ONNX。这是后面所有案例的地基。</li>
+    <li><b>理解了"参数量"从哪来</b>：每一层的 <code>输入×输出 + 偏置</code>，加总 4353。不再是玄学。</li>
+    <li><b>知道了激活函数不能乱接</b>：最后一层接 ReLU 会导致输出永远非负，直接废掉。</li>
+    <li><b>学会了两个保命习惯</b>：动 pip 前先 dry-run 预演；写数字前先回读源码。</li>
+    <li><b>认清了"seed ≠ 完全可复现"</b>：这个认知在后面扩展案例 1 里会被彻底验证（同一台机器跑两次结果都不同）。</li>
+  </ol>
+  <div class="callout c-info">
+    <span class="t">下一课预告</span>
+    <p>微课 02 会把本课导出的 <code>sin_model.onnx</code>（18244 字节）用 ESP-PPQ 压成 8 位整数的 <code>.espdl</code>。届时体积会掉到 7696 字节——<b>不到一半</b>。怎么做到的、代价是什么，见《微课 02 · 量化 sin 模型》。</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">6</span>红线遵守说明</h2>
+  <div class="callout c-ok">
+    <span class="t">老师原始文件全程未改动</span>
+    <p><code>sin_model.py</code> 实测仍为 <b>180 行 / 6691 字节 / MD5 <span class="md5">9D397A182D983EA2C04920031D7E8F43</span></b>。所有注释版、手写版一律另存为新副本；老师提供的 <code>outputs/</code> 原样保留，验证性运行一律输出到独立目录。</p>
+  </div>
+  <p class="muted">本页所有数字均来自实跑产物或源码回读，无一项凭记忆填写。详细的分项报告见同目录《实验报告_01_train_sin_model.html》。</p>
+</section>
+
+</div>
+<footer>《端侧智能推理系统 MVP》 ｜ 微课 01 案例说明 ｜ 2026-09-17</footer>
+</body>
+</html>
