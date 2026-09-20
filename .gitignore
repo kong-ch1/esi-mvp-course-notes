@@ -1,0 +1,36 @@
+# ESP-IDF 构建产物
+build/
+managed_components/
+sdkconfig
+sdkconfig.old
+dependencies.lock*
+
+# Python
+__pycache__/
+*.py[cod]
+
+# 系统与编辑器
+.DS_Store
+.vscode/
+**/.trae/
+*.log
+
+# 本地运行输出与凭据
+data/logs/
+data/exports/
+.env
+.env.*
+!.env.example
+wifi.local
+secrets.local
+
+# 猫狗数据集下载文件
+extensions/01_train_catdog_model/cats-dogs-data.zip
+extensions/01_train_catdog_model/cats-dogs-data/
+
+# 第三方独立仓库（Orange Pi 后端）
+rkllm/rkllama/
+rkllm/rknn-llm/
+
+# 本地同步冲突副本
+*-NSConflict-*
