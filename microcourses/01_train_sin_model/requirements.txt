@@ -1,0 +1,8 @@
+# 第 1 集 Python 依赖（Python 3.11，conda 环境 esp32s3 已验证）
+# esp-ppq 会自动带入 flatbuffers/onnxruntime/toml/tqdm 等传递依赖，此处不钉版本
+torch==2.11.0
+onnx==1.17.0
+onnxsim==0.4.36
+esp-ppq==1.2.10
+matplotlib==3.10.8
+numpy==2.4.4

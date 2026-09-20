@@ -1,0 +1,6 @@
+torch==2.11.0
+torchvision
+onnx==1.17.0
+onnxsim==0.4.36
+matplotlib==3.10.8
+numpy==2.4.4
